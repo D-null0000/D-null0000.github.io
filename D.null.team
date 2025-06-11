@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <title>Terugknop Pagina</title>
+</head>
+<body>
+  <h1>Welkom op deze pagina</h1>
+  <p>Dit is een voorbeeldpagina met een knop om terug te gaan naar index.html.</p>
+
+  <button onclick="window.location.href='index.html'">Terug naar Home</button>
+</body>
+</html>
