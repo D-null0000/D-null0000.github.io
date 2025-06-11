@@ -45,9 +45,6 @@
     position: relative;
     z-index: 1;
   }
-  #terminal::-webkit-scrollbar { width: 8px; }
-  #terminal::-webkit-scrollbar-track { background: #001100; }
-  #terminal::-webkit-scrollbar-thumb { background: #00bb00; }
   #prompt-line {
     display: flex;
     align-items: center;
@@ -68,9 +65,6 @@
     padding: 0;
     margin: 0;
   }
-  #prompt-line.focused #password-input {
-    caret-color: #00ff00;
-  }
   .cursor {
     display: inline-block;
     background-color: #00ff00;
@@ -84,10 +78,6 @@
     0%, 50% { opacity: 1; }
     50.1%, 100% { opacity: 0; }
   }
-  .output-line {
-    white-space: pre-wrap;
-    user-select: text;
-  }
   footer {
     padding: 8px 16px;
     font-family: monospace;
@@ -97,31 +87,24 @@
     background-color: #001100;
     border-top: 1px solid #004400;
     user-select: none;
-    flex-shrink: 0;
-  }
-  @media (max-width: 480px) {
-    body, html { font-size: 1rem; }
-    #terminal { padding: 12px; }
   }
 </style>
 </head>
 <body>
 <div id="matrix"></div>
-<div id="app" role="application" aria-label="Terminal access for D. null website module">
-  <div id="terminal" role="document" tabindex="0" aria-live="polite" aria-atomic="false" aria-relevant="additions">
-    <!-- Terminal output lines will be appended here -->
+<div id="app">
+  <div id="terminal" tabindex="0">
+    <!-- Terminal output -->
   </div>
-  <form id="password-form" role="form" aria-label="Password prompt" autocomplete="off" spellcheck="false" novalidate style="margin-top:8px;">
-    <label for="password-input" class="visually-hidden">Password:</label>
-    <div id="prompt-line" tabindex="0" aria-live="off" aria-atomic="false">
-      <span id="prompt-text" aria-hidden="true">C:\Users\D.null&gt; </span>
-      <input id="password-input" type="password" aria-describedby="prompt-instructions" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus />
-      <span class="cursor" aria-hidden="true"></span>
+  <form id="password-form" autocomplete="off" spellcheck="false" novalidate style="margin-top:8px;">
+    <div id="prompt-line" tabindex="0">
+      <span id="prompt-text">C:\Users\D.null&gt; </span>
+      <input id="password-input" type="password" autocomplete="off" autofocus />
+      <span class="cursor"></span>
     </div>
-    <div id="prompt-instructions" style="position:absolute;left:-9999px;">Enter password to access the website</div>
   </form>
 </div>
-<footer aria-hidden="true" role="contentinfo">
+<footer>
   D. null Terminal Access © 2025 | Ver 1.0.0
 </footer>
 
@@ -129,12 +112,6 @@
   // Matrix background effect
   (function(){
     const canvas = document.createElement('canvas');
-    canvas.style.position = 'fixed';
-    canvas.style.top = 0; canvas.style.left = 0;
-    canvas.style.width = '100vw';
-    canvas.style.height = '100vh';
-    canvas.style.zIndex = 0;
-    canvas.style.pointerEvents = 'none';
     document.getElementById('matrix').appendChild(canvas);
     const ctx = canvas.getContext('2d');
     let width, height;
@@ -144,62 +121,46 @@
     }
     resize();
     window.addEventListener('resize', resize);
-
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()*&^%+-/~{[|`]}';
     const fontSize = 16;
     const columns = Math.floor(width / fontSize);
     let drops = new Array(columns).fill(1);
-
     function draw() {
       ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
       ctx.fillRect(0, 0, width, height);
-
       ctx.fillStyle = '#00ff00';
       ctx.font = fontSize + 'px monospace';
-
       for(let i = 0; i < drops.length; i++) {
         const text = letters.charAt(Math.floor(Math.random() * letters.length));
         ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-        if(drops[i] * fontSize > height && Math.random() > 0.975) {
-          drops[i] = 0;
-        }
+        if(drops[i] * fontSize > height && Math.random() > 0.975) drops[i] = 0;
         drops[i]++;
       }
     }
     setInterval(draw, 40);
   })();
 
-  // Terminal typing simulation with password check & redirect
+  // Terminal logic
   (function(){
     const form = document.getElementById('password-form');
     const input = document.getElementById('password-input');
     const terminal = document.getElementById('terminal');
     const promptLine = document.getElementById('prompt-line');
-    const correctPassword = 'D.null_D.null'; // <-- verander dit wachtwoord zo nodig
+    const correctPassword = 'D.null_D.null'; // <- wijzig dit indien gewenst
 
-    promptLine.classList.add('focused');
-    input.focus();
-
-    function addLine(text = '', className = '') {
+    function addLine(text = '') {
       const line = document.createElement('div');
       line.textContent = text;
-      if(className) line.className = className;
       terminal.appendChild(line);
       terminal.scrollTop = terminal.scrollHeight;
-      return line;
     }
 
-    function clearTerminalOutput() {
+    function clearTerminal() {
       terminal.innerHTML = '';
     }
 
-    function showAccessDenied() {
-      addLine('Access Denied. Incorrect password.');
-    }
-
-    async function showBootupSequence() {
-      clearTerminalOutput();
+    function showBootup() {
+      clearTerminal();
       addLine('Initializing D.null Secure Terminal Access...');
       addLine('Loading modules: [█████████████] 100%');
       addLine('System check: All systems nominal.');
@@ -210,27 +171,19 @@
       e.preventDefault();
       const val = input.value.trim();
       input.value = '';
-      promptLine.classList.remove('focused');
       input.disabled = true;
-
       if(val === correctPassword) {
-        window.location.href = 'https://d-null0000.github.io/D.null.html';
+        // ✅ redirect naar juiste pagina
+        window.location.href = 'https://d-null0000.github.io/D_null_team.html';
       } else {
-        showAccessDenied();
+        addLine('Access Denied. Incorrect password.');
         input.disabled = false;
-        promptLine.classList.add('focused');
         input.focus();
       }
     });
 
-    document.addEventListener('keydown', (e) => {
-      if(e.key === 'Tab') {
-        e.preventDefault();
-        input.focus();
-      }
-    });
-
-    showBootupSequence(); // ✅ zonder parameters
+    showBootup();
+    input.focus();
   })();
 </script>
 </body>
