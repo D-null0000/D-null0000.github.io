@@ -1,13 +1,214 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Terugknop Pagina</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>D. null - Dashboard</title>
+<style>
+  /* Reset and base */
+  * {
+    box-sizing: border-box;
+  }
+  body, html {
+    margin: 0; padding: 0; height: 100%;
+    background: #000000;
+    color: #00ff00;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 1.2rem;
+    line-height: 1.4;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px;
+    overflow: hidden;
+  }
+
+  main {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    width: 100%;
+    max-width: 640px;
+    position: relative;
+    z-index: 2;
+  }
+
+  h1 {
+    color: #00ff00;
+    text-align: center;
+    margin-bottom: 32px;
+    user-select: text;
+    font-weight: bold;
+    text-shadow:
+      0 0 6px #00ff00,
+      0 0 12px #00bb00;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Popup style - terminal card with glow */
+  .popup {
+    background: rgba(0, 51, 0, 0.35);
+    border: 2px solid #00ff00;
+    border-radius: 10px;
+    padding: 24px 32px;
+    box-shadow:
+      0 0 10px #00ff00,
+      inset 0 0 25px #00cc00;
+    color: #00ff00;
+    font-family: monospace;
+    font-size: 2rem;
+    text-align: center;
+    position: relative;
+    cursor: default;
+    transition: box-shadow 0.3s ease;
+    user-select: text;
+    z-index: 2;
+  }
+
+  /* Flicker animation for popup text */
+  @keyframes flicker {
+    0%, 100% { opacity: 1; text-shadow:
+      0 0 5px #00ff00,
+      0 0 10px #00ff00,
+      0 0 20px #00ff00;}
+    50% { opacity: 0.7; text-shadow: none; }
+  }
+
+  .popup span {
+    animation: flicker 1.5s infinite;
+    user-select: text;
+  }
+
+  /* Popup hover glow intensify */
+  .popup:hover {
+    box-shadow:
+      0 0 20px #33ff33,
+      inset 0 0 40px #33ff33;
+  }
+
+  /* Footer - terminal style status bar */
+  footer {
+    padding: 12px 16px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: #007700;
+    text-shadow:
+      0 0 10px #004400;
+    background-color: #001100;
+    border-top: 1px solid #004400;
+    user-select: none;
+    flex-shrink: 0;
+    margin-top: 48px;
+    width: 100%;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Matrix style letter streams background */
+  #matrix {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.1;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    body, html {
+      font-size: 1rem;
+      padding: 24px 12px;
+    }
+    .popup {
+      font-size: 1.5rem;
+      padding: 18px 24px;
+    }
+    main {
+      gap: 32px;
+    }
+  }
+</style>
 </head>
 <body>
-  <h1>Welkom op deze pagina</h1>
-  <p>Dit is een voorbeeldpagina met een knop om terug te gaan naar index.html.</p>
+<div id="matrix"></div>
+<main role="main" aria-label="D.null Dashboard with soon popups">
+  <h1>Dashboard - D. null</h1>
+  <section class="popup" role="alert" aria-live="polite" aria-atomic="true" tabindex="0">
+    <span>Soon</span>
+  </section>
+  <section class="popup" role="alert" aria-live="polite" aria-atomic="true" tabindex="0">
+    <span>Soon</span>
+  </section>
+  <section class="popup" role="alert" aria-live="polite" aria-atomic="true" tabindex="0">
+    <span>Soon</span>
+  </section>
+</main>
+<footer aria-hidden="true">
+  D. null Dashboard © 2025 | Ver 1.0.0
+</footer>
+<script>
+  // Matrix background effect
+  (function(){
+    const canvas = document.createElement('canvas');
+    document.getElementById('matrix').appendChild(canvas);
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
 
-  <button onclick="window.location.href='index.html'">Terug naar Home</button>
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()*&^%+-/~{[|`]}';
+    const fontSize = 16;
+    let columns;
+    let drops;
+
+    function initDrops() {
+      columns = Math.floor(width / fontSize);
+      drops = new Array(columns).fill(1);
+    }
+
+    initDrops();
+
+    function draw() {
+      // Dark translucent background to create trail
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.fillStyle = '#00ff00';
+      ctx.font = fontSize + 'px monospace';
+
+      for(let i = 0; i < drops.length; i++) {
+        const text = letters.charAt(Math.floor(Math.random() * letters.length));
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        // Reset drop to top randomly after it goes beyond screen
+        if(drops[i] * fontSize > height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+    setInterval(draw, 40);
+
+    window.addEventListener('resize', () => {
+      resize();
+      initDrops();
+    });
+  })();
+</script>
 </body>
 </html>
+
