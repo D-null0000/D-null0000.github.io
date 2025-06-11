@@ -3,12 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>D. null - Terminal Access</title>
+<title>D. null - Access Screen</title>
 <style>
-  /* Reset and Base */
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
   body, html {
     margin: 0; padding: 0; height: 100%;
     background: #000000;
@@ -27,8 +24,6 @@
     position: relative;
     overflow: hidden;
   }
-
-  /* Matrix style letter streams background */
   #matrix {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
@@ -36,19 +31,12 @@
     z-index: 0;
     opacity: 0.1;
   }
-
-  canvas {
-    display: block;
-  }
-
-  /* Terminal container styles */
+  canvas { display: block; }
   #terminal {
     background: transparent;
     border: 2px solid #008000;
     border-radius: 4px;
-    box-shadow:
-      0 0 10px #00ff00,
-      inset 0 0 20px #00bb00;
+    box-shadow: 0 0 10px #00ff00, inset 0 0 20px #00bb00;
     flex: 1;
     padding: 20px;
     overflow-y: auto;
@@ -57,31 +45,16 @@
     position: relative;
     z-index: 1;
   }
-
-  /* Scrollbar in green */
-  #terminal::-webkit-scrollbar {
-    width: 8px;
-  }
-  #terminal::-webkit-scrollbar-track {
-    background: #001100;
-  }
-  #terminal::-webkit-scrollbar-thumb {
-    background: #00bb00;
-  }
-
-  /* Prompt line styles */
+  #terminal::-webkit-scrollbar { width: 8px; }
+  #terminal::-webkit-scrollbar-track { background: #001100; }
+  #terminal::-webkit-scrollbar-thumb { background: #00bb00; }
   #prompt-line {
     display: flex;
     align-items: center;
     gap: 8px;
     font-weight: bold;
   }
-
-  #prompt-text {
-    flex-shrink: 0;
-    user-select: text;
-  }
-
+  #prompt-text { flex-shrink: 0; user-select: text; }
   #password-input {
     background: none;
     border: none;
@@ -95,13 +68,9 @@
     padding: 0;
     margin: 0;
   }
-
-  /* Blinking cursor after input */
   #prompt-line.focused #password-input {
     caret-color: #00ff00;
   }
-
-  /* Caret animation on after element for blinking block cursor */
   .cursor {
     display: inline-block;
     background-color: #00ff00;
@@ -115,35 +84,24 @@
     0%, 50% { opacity: 1; }
     50.1%, 100% { opacity: 0; }
   }
-
-  /* Typed output lines */
   .output-line {
     white-space: pre-wrap;
     user-select: text;
   }
-
-  /* Footer styled like terminal status bar */
   footer {
     padding: 8px 16px;
     font-family: monospace;
     font-size: 0.9rem;
     color: #007700;
-    text-shadow:
-      0 0 10px #004400;
+    text-shadow: 0 0 10px #004400;
     background-color: #001100;
     border-top: 1px solid #004400;
     user-select: none;
     flex-shrink: 0;
   }
-
-  /* Responsive */
   @media (max-width: 480px) {
-    body, html {
-      font-size: 1rem;
-    }
-    #terminal {
-      padding: 12px;
-    }
+    body, html { font-size: 1rem; }
+    #terminal { padding: 12px; }
   }
 </style>
 </head>
@@ -212,19 +170,17 @@
     setInterval(draw, 40);
   })();
 
-  // Terminal typing simulation with password check & redirect on success
+  // Terminal typing simulation with password check & redirect
   (function(){
     const form = document.getElementById('password-form');
     const input = document.getElementById('password-input');
     const terminal = document.getElementById('terminal');
     const promptLine = document.getElementById('prompt-line');
-    const correctPassword = 'D.null_D.null';
+    const correctPassword = 'D.null_D.null'; // <-- verander dit wachtwoord zo nodig
 
-    // To keep tab focus on input
     promptLine.classList.add('focused');
     input.focus();
 
-    // Utility: Create output line
     function addLine(text = '', className = '') {
       const line = document.createElement('div');
       line.textContent = text;
@@ -234,16 +190,14 @@
       return line;
     }
 
-    // Clear terminal screen content except prompt form
     function clearTerminalOutput() {
       terminal.innerHTML = '';
     }
 
-    // Show error message in terminal
     function showAccessDenied() {
       addLine('Access Denied. Incorrect password.');
     }
-    // Initial greeting lines
+
     async function showBootupSequence() {
       clearTerminalOutput();
       addLine('Initializing D.null Secure Terminal Access...');
@@ -252,7 +206,6 @@
       addLine('Enter password to continue.');
     }
 
-    // On form submit
     form.addEventListener('submit', function(e){
       e.preventDefault();
       const val = input.value.trim();
@@ -261,8 +214,7 @@
       input.disabled = true;
 
       if(val === correctPassword) {
-        // Redirect immediately to D.null.html
-        window.location.href = 'D.null.html';
+        window.location.href = 'https://d-null0000.github.io/D.null.html';
       } else {
         showAccessDenied();
         input.disabled = false;
@@ -271,7 +223,6 @@
       }
     });
 
-    // Trap focus inside prompt
     document.addEventListener('keydown', (e) => {
       if(e.key === 'Tab') {
         e.preventDefault();
@@ -279,9 +230,7 @@
       }
     });
 
-    // Run bootup sequence on page load
-    showBootupSequence();
-
+    showBootupSequence(); // ✅ zonder parameters
   })();
 </script>
 </body>
