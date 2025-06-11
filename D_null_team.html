@@ -89,6 +89,42 @@
       inset 0 0 40px #33ff33;
   }
 
+  /* Container for extra buttons */
+  .button-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 16px;
+    z-index: 2;
+  }
+
+  /* Small buttons styling */
+  button {
+    background: rgba(0, 51, 0, 0.35);
+    border: 2px solid #00ff00;
+    border-radius: 10px;
+    padding: 8px 24px;
+    color: #00ff00;
+    font-family: monospace;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow:
+      0 0 6px #00ff00,
+      inset 0 0 12px #00cc00;
+    transition: box-shadow 0.3s ease;
+    user-select: none;
+  }
+  button:hover, button:focus {
+    box-shadow:
+      0 0 12px #33ff33,
+      inset 0 0 20px #33ff33;
+    outline: none;
+  }
+  button:focus-visible {
+    outline: 3px solid #33ff33;
+    outline-offset: 2px;
+  }
+
   /* Footer - terminal style status bar */
   footer {
     padding: 12px 16px;
@@ -106,6 +142,37 @@
     text-align: center;
     position: relative;
     z-index: 2;
+  }
+
+  /* Back button bottom right */
+  #back-button {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    font-size: 1.2rem;
+    border-radius: 8px;
+    padding: 0;
+    z-index: 10;
+    background: rgba(0, 51, 0, 0.35);
+    border: 2px solid #00ff00;
+    color: #00ff00;
+    cursor: pointer;
+    box-shadow:
+      0 0 6px #00ff00,
+      inset 0 0 12px #00cc00;
+    user-select: none;
+  }
+  #back-button:hover, #back-button:focus {
+    box-shadow:
+      0 0 12px #33ff33,
+      inset 0 0 20px #33ff33;
+    outline: none;
+  }
+  #back-button:focus-visible {
+    outline: 3px solid #33ff33;
+    outline-offset: 2px;
   }
 
   /* Matrix style letter streams background */
@@ -136,6 +203,17 @@
     main {
       gap: 32px;
     }
+    .button-row {
+      flex-direction: column;
+      gap: 12px;
+    }
+    #back-button {
+      width: 40px;
+      height: 40px;
+      font-size: 1rem;
+      bottom: 12px;
+      right: 12px;
+    }
   }
 </style>
 </head>
@@ -152,39 +230,40 @@
   <section class="popup" role="alert" aria-live="polite" aria-atomic="true" tabindex="0">
     <span>Soon</span>
   </section>
+
+  <div class="button-row" aria-label="Additional controls">
+    <button id="toggle-bg" type="button" aria-pressed="false" aria-label="Toggle dense letter background">Toggle Background</button>
+    <button id="logout" type="button" aria-label="Log out and close tab">Logout</button>
+  </div>
 </main>
+<button id="back-button" aria-label="Back to top">&#x21A9;</button>
 <footer aria-hidden="true">
-  D. null Dashboard © 2025 | Ver 1.0.0
+  D. null Terminal Dashboard © 2025 | Ver 1.0.0
 </footer>
 <script>
-  // Matrix background effect
+  // Matrix background effect - normal low density
   (function(){
+    const container = document.getElementById('matrix');
     const canvas = document.createElement('canvas');
-    document.getElementById('matrix').appendChild(canvas);
+    container.appendChild(canvas);
     const ctx = canvas.getContext('2d');
     let width, height;
+    let drops;
+    let columns;
+    const fontSize = 16;
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()*&^%+-/~{[|`]}';
+
     function resize() {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
+      columns = Math.floor(width / fontSize);
+      drops = new Array(columns).fill(1);
     }
     resize();
     window.addEventListener('resize', resize);
 
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()*&^%+-/~{[|`]}';
-    const fontSize = 16;
-    let columns;
-    let drops;
-
-    function initDrops() {
-      columns = Math.floor(width / fontSize);
-      drops = new Array(columns).fill(1);
-    }
-
-    initDrops();
-
     function draw() {
-      // Dark translucent background to create trail
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.07)';
       ctx.fillRect(0, 0, width, height);
 
       ctx.fillStyle = '#00ff00';
@@ -194,21 +273,134 @@
         const text = letters.charAt(Math.floor(Math.random() * letters.length));
         ctx.fillText(text, i * fontSize, drops[i] * fontSize);
 
-        // Reset drop to top randomly after it goes beyond screen
         if(drops[i] * fontSize > height && Math.random() > 0.975) {
           drops[i] = 0;
         }
         drops[i]++;
       }
     }
-    setInterval(draw, 40);
 
-    window.addEventListener('resize', () => {
-      resize();
-      initDrops();
+    let animationId;
+    function animate() {
+      draw();
+      animationId = requestAnimationFrame(animate);
+    }
+
+    // Control animation loop
+    window.matrixAnimation = {
+      running: false,
+      start() {
+        if (!this.running) {
+          this.running = true;
+          animate();
+        }
+      },
+      stop() {
+        if (this.running) {
+          this.running = false;
+          cancelAnimationFrame(animationId);
+          ctx.clearRect(0, 0, width, height);
+        }
+      }
+    };
+  })();
+
+  // Denser matrix effect for toggle
+  (function(){
+    const container = document.getElementById('matrix');
+    const denseCanvas = document.createElement('canvas');
+    container.appendChild(denseCanvas);
+    denseCanvas.style.display = 'none';
+    const ctx = denseCanvas.getContext('2d');
+    let width, height;
+    let drops;
+    let columns;
+    const fontSize = 14;
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()*&^%+-/~{[|`]}';
+
+    function resize() {
+      width = denseCanvas.width = window.innerWidth;
+      height = denseCanvas.height = window.innerHeight;
+      columns = Math.floor(width / fontSize);
+      drops = new Array(columns).fill(1);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function draw() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.fillStyle = '#00ff00';
+      ctx.font = fontSize + 'px monospace';
+
+      for(let i = 0; i < drops.length; i++) {
+        const text = letters.charAt(Math.floor(Math.random() * letters.length));
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        if(drops[i] * fontSize > height && Math.random() > 0.92) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+
+    let animationId;
+    function animate() {
+      draw();
+      animationId = requestAnimationFrame(animate);
+    }
+
+    let running = false;
+    function start() {
+      if (!running) {
+        running = true;
+        denseCanvas.style.display = 'block';
+        animate();
+      }
+    }
+    function stop() {
+      if (running) {
+        running = false;
+        cancelAnimationFrame(animationId);
+        denseCanvas.style.display = 'none';
+        ctx.clearRect(0, 0, width, height);
+      }
+    }
+
+    window.denseMatrixAnimation = { start, stop, canvas: denseCanvas };
+  })();
+
+  // Interaction logic
+  (function(){
+    const toggleBtn = document.getElementById('toggle-bg');
+    const logoutBtn = document.getElementById('logout');
+    const backBtn = document.getElementById('back-button');
+
+    let denseActive = false;
+
+    toggleBtn.addEventListener('click', () => {
+      denseActive = !denseActive;
+      toggleBtn.setAttribute('aria-pressed', denseActive.toString());
+      if(denseActive) {
+        window.denseMatrixAnimation.start();
+      } else {
+        window.denseMatrixAnimation.stop();
+      }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      if(window.confirm('Exit and close this tab?')) {
+        window.close();
+      }
+    });
+
+    backBtn.addEventListener('click', () => {
+      window.scrollTo({top:0, behavior:'smooth'});
     });
   })();
 </script>
 </body>
 </html>
+
 
