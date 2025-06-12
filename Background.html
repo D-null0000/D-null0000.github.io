@@ -1,9 +1,478 @@
 <!DOCTYPE html>
-<html>
+<html lang="nl">
 <head>
-  <title>Test</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hacker Letter Waterfall</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Overpass+Mono&display=swap');
+
+    /* Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      background-color: var(--bg-color, #000010);
+      overflow: hidden;
+      font-family: 'Overpass Mono', monospace, monospace;
+      color: var(--letter-color, #3f00ff);
+    }
+
+    canvas {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      background: var(--bg-color, #000010);
+    }
+
+    /* Bottom right menu button */
+    #menu-button {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background-color: var(--letter-color, #3f00ff);
+      border: none;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(63, 0, 255, 0.5);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      z-index: 10;
+      user-select: none;
+      min-width: 130px;
+      display: block;
+    }
+    #menu-button:hover,
+    #menu-button:focus {
+      background-color: #6a40ff;
+      outline: none;
+      transform: scale(1.05);
+    }
+
+    /* Overlay for menu */
+    #menu-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 16, 0.85);
+      backdrop-filter: blur(6px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+      padding: 24px;
+    }
+    #menu-overlay.show {
+      display: flex;
+    }
+
+    /* Menu container */
+    #menu {
+      background: #11003f;
+      border-radius: 16px;
+      padding: 32px 40px;
+      max-width: 420px; /* Increased width */
+      width: 100%;
+      box-shadow: 0 10px 30px rgba(63, 0, 255, 0.7);
+      color: #d4ccff;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      position: relative;
+    }
+
+    #menu h2 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      text-align: center;
+      color: var(--letter-color, #3f00ff);
+      margin-bottom: 16px;
+    }
+
+    /* Label and control styling */
+    label {
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: block;
+      color: #bfb6ff;
+      cursor: pointer;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      -webkit-appearance: none;
+      background: #2a007f;
+      height: 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      background: var(--letter-color, #3f00ff);
+      cursor: pointer;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      transition: background-color 0.3s ease;
+      margin-top: -6px;
+    }
+    input[type="range"]:focus::-webkit-slider-thumb {
+      background: #6a40ff;
+      outline: none;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      background: var(--letter-color, #3f00ff);
+      cursor: pointer;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      transition: background-color 0.3s ease;
+    }
+
+    /* Theme selector */
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #6a40ff;
+      background: #1a007a;
+      color: #d4ccff;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Overpass Mono', monospace;
+      transition: background-color 0.3s ease;
+    }
+    select:hover,
+    select:focus {
+      background-color: #2a008f;
+      outline: none;
+    }
+
+    /* Buttons in menu */
+    .menu-button {
+      background-color: var(--letter-color, #3f00ff);
+      border: none;
+      padding: 12px 0;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(63, 0, 255, 0.7);
+      transition: background-color 0.3s ease, transform 0.15s ease;
+      user-select: none;
+    }
+    .menu-button:hover,
+    .menu-button:focus {
+      background-color: #6a40ff;
+      outline: none;
+      transform: scale(1.03);
+    }
+
+    /* Close button */
+    #close-menu {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      background: transparent;
+      border: none;
+      font-size: 28px;
+      color: var(--letter-color, #3f00ff);
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.3s ease;
+    }
+    #close-menu:hover,
+    #close-menu:focus {
+      color: #6a40ff;
+      outline: none;
+    }
+
+    /* Container for dashboard button and menu toggle checkbox side by side */
+    .dashboard-toggle-container {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .toggle-container input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 480px) {
+      #menu {
+        padding: 24px 28px;
+        width: 90vw;
+      }
+      #menu-button {
+        min-width: 110px;
+        padding: 10px 14px;
+        font-size: 14px;
+        bottom: 16px;
+        right: 16px;
+      }
+      .dashboard-toggle-container {
+        gap: 10px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <h1>Als het goed is werkt het ;)</h1>
+  <canvas id="matrix"></canvas>
+
+  <!-- Bottom right menu button, visibility toggled by menu control -->
+  <button id="menu-button" aria-haspopup="true" aria-expanded="false" aria-controls="menu-overlay" aria-label="Open menu">
+    Menu
+  </button>
+
+  <div id="menu-overlay" role="dialog" aria-modal="true" aria-labelledby="menu-title" tabindex="-1">
+    <section id="menu" tabindex="0">
+      <button id="close-menu" aria-label="Sluit menu">&times;</button>
+      <h2 id="menu-title">Instellingen</h2>
+      
+      <div>
+        <label for="speed-range">Snelheid van letters</label>
+        <input 
+          type="range" 
+          id="speed-range" 
+          min="10" max="100" value="33"
+          aria-valuemin="10"
+          aria-valuemax="100"
+          aria-valuenow="33"
+          aria-label="Pas de snelheid van de letters aan"
+        />
+      </div>
+
+      <div>
+        <label for="theme-select">Thema van de waterval</label>
+        <select id="theme-select" aria-label="Selecteer thema voor de waterval">
+          <option value="purple">Paars - #3f00ff</option>
+          <option value="green">Groen - #00ff3f</option>
+          <option value="red">Rood - #ff003f</option>
+          <option value="cyan">Cyaan - #00fff7</option>
+          <option value="orange">Oranje - #ff8000</option>
+        </select>
+      </div>
+
+      <div class="dashboard-toggle-container">
+        <button id="dashboard-button" class="menu-button" type="button" aria-label="Terug naar dashboard" onclick="window.location.href='https://d-null0000.github.io/D_null_team.html'">
+          Terug naar Dashboard
+        </button>
+
+        <div class="toggle-container">
+          <!-- Checkbox unchecked by default (no check attribute) so menu button visible -->
+          <input type="checkbox" id="toggle-menu-button" />
+          <label for="toggle-menu-button">Hide menu</label>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <script>
+    (function() {
+      const canvas = document.getElementById('matrix');
+      const ctx = canvas.getContext('2d');
+
+      let width = window.innerWidth;
+      let height = window.innerHeight;
+
+      let fontSize = 22;
+      let speed = 33; // ms interval default
+
+      let theme = 'purple';
+
+      // Define themes with letter color and background color
+      const themes = {
+        purple:   { letterColor: '#3f00ff', bgColor: '#000010' },
+        green:    { letterColor: '#00ff3f', bgColor: '#001000' },
+        red:      { letterColor: '#ff003f', bgColor: '#100000' },
+        cyan:     { letterColor: '#00fff7', bgColor: '#001010' },
+        orange:   { letterColor: '#ff8000', bgColor: '#201000' }
+      };
+
+      // Characters: Uppercase letters, lowercase, numbers, and some symbols
+      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*+=?';
+      const chars = characters.split('');
+
+      // Drops array will be initialized on resize or start
+      let columns;
+      let drops;
+
+      // Setup canvas size and drops
+      function setup() {
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        columns = Math.floor(width / fontSize);
+        drops = new Array(columns).fill(1);
+
+        // Update CSS variables for theme
+        const themeColors = themes[theme];
+        document.documentElement.style.setProperty('--letter-color', themeColors.letterColor);
+        document.documentElement.style.setProperty('--bg-color', themeColors.bgColor);
+      }
+
+      // Draw function for letter waterfall
+      function draw() {
+        // Fading trail effect with slight opacity depending on current theme background
+        ctx.fillStyle = 'rgba(0, 0, 16, 0.03)';
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.fillStyle = themes[theme].letterColor;
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.font = 'bold ' + fontSize + 'px "Overpass Mono"';
+
+        for (let i = 0; i < drops.length; i++) {
+          const text = chars[Math.floor(Math.random() * chars.length)];
+          const x = i * fontSize;
+          const y = drops[i] * fontSize;
+
+          ctx.fillText(text, x, y);
+
+          if (y > height && Math.random() > 0.975) {
+            drops[i] = 0;
+          }
+
+          drops[i]++;
+        }
+      }
+
+      // Setup initial state
+      setup();
+
+      // Handle resizing
+      window.addEventListener('resize', () => {
+        setup();
+      });
+
+      // Animation loop controlled by speed variable
+      let intervalId = setInterval(draw, speed);
+
+      // Menu elements and controls
+      const menuButton = document.getElementById('menu-button');
+      const menuOverlay = document.getElementById('menu-overlay');
+      const closeMenuBtn = document.getElementById('close-menu');
+      const speedRange = document.getElementById('speed-range');
+      const themeSelect = document.getElementById('theme-select');
+      const dashboardButton = document.getElementById('dashboard-button');
+      const toggleMenuButtonCheckbox = document.getElementById('toggle-menu-button');
+
+      // Accessibility: trap focus in menu when open
+      let lastFocusedElement;
+
+      function openMenu() {
+        lastFocusedElement = document.activeElement;
+        menuOverlay.classList.add('show');
+        menuOverlay.focus();
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeMenu() {
+        menuOverlay.classList.remove('show');
+        lastFocusedElement?.focus();
+        document.body.style.overflow = '';
+      }
+
+      // Open menu on ESC key press toggle
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          if (menuOverlay.classList.contains('show')) {
+            closeMenu();
+          } else {
+            openMenu();
+          }
+        }
+      });
+
+      // Clicking the bottom-right menu button opens menu if visible
+      menuButton.addEventListener('click', () => {
+        openMenu();
+      });
+
+      closeMenuBtn.addEventListener('click', closeMenu);
+
+      // Trap focus inside menu overlay for accessibility
+      menuOverlay.addEventListener('keydown', (e) => {
+        if (e.key === 'Tab') {
+          const focusableElements = menuOverlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+          const firstElement = focusableElements[0];
+          const lastElement = focusableElements[focusableElements.length -1];
+          if (!e.shiftKey && document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          } else if (e.shiftKey && document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        }
+      });
+
+      // Speed control change handler
+      speedRange.addEventListener('input', (e) => {
+        const val = Number(e.target.value);
+        speed = val;
+        speedRange.setAttribute('aria-valuenow', val);
+        clearInterval(intervalId);
+        intervalId = setInterval(draw, speed);
+      });
+
+      // Theme change handler
+      themeSelect.addEventListener('change', (e) => {
+        theme = e.target.value;
+        const themeColors = themes[theme];
+        document.documentElement.style.setProperty('--letter-color', themeColors.letterColor);
+        document.documentElement.style.setProperty('--bg-color', themeColors.bgColor);
+        draw();
+      });
+
+      // Dashboard button handler: redirect to provided dashboard URL
+      dashboardButton.addEventListener('click', () => {
+        closeMenu();
+        window.location.href = 'https://d-null0000.github.io/D_null_team.html';
+      });
+
+      // Toggle bottom-right menu button visibility (inverted logic)
+      function updateMenuButtonVisibility(checked) {
+        // When checkbox is checked, hide the menu button; unchecked means show it
+        menuButton.style.display = checked ? 'none' : 'block';
+      }
+
+      toggleMenuButtonCheckbox.addEventListener('change', (e) => {
+        updateMenuButtonVisibility(e.target.checked);
+      });
+
+      // Initialize menu button visibility from checkbox state (unchecked means visible)
+      toggleMenuButtonCheckbox.checked = false;
+      updateMenuButtonVisibility(toggleMenuButtonCheckbox.checked);
+
+      // Initialize draw immediately so page isn't blank
+      draw();
+    })();
+  </script>
 </body>
 </html>
+
